@@ -2,8 +2,8 @@ This repository contains helper scripts for using advanced functionality on Mage
 
 Script types are categorised by the following types,
 
- - cli  
+ - `cli`  
    Where it is expected that the script is executed via command line or cron.
 
- - web  
+ - `web`  
    Where the script should be executed via web browser.
