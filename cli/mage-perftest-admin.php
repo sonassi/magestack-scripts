@@ -127,9 +127,8 @@ EOF;
         {
             $user = Mage::getModel('admin/user');
 
-            if ($user->loadByUsername(self::USERNAME)->getUsername()) {
+            if ($user = $user->loadByUsername(self::USERNAME)->getUsername()) {
                 $this->output("Deleted admin user");
-                $user = $user->loadByUsername(self::USERNAME);
                 $user->delete();
             }
         }
