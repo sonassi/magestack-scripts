@@ -125,9 +125,9 @@ EOF;
 
         private function deleteAdmin()
         {
-            $user = Mage::getModel('admin/user')->loadByUsername(self::USERNAME)->getUsername();
+            $user = Mage::getModel('admin/user');
+            $user->loadByUsername(self::USERNAME)->delete();
             $this->output("Deleted admin user");
-            $user->delete();
         }
 
         private function createAdmin()
