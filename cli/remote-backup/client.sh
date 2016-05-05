@@ -72,6 +72,12 @@ for HOST in ${REMOTE_HOSTS[@]}; do
 
   # Check to see if any remote backups are running before proceeding
   for BACKUP_TYPE in ${BACKUP_TYPES[@]}; do
+    case $BACKUP_TYPE in
+      "logs_ro")
+        continue
+        ;;
+     esac
+
     RES=$(</dev/null ssh $SSH_OPTS $REMOTE "ls $MAIN_BACKUP_DIR/.$BACKUP_TYPE.running" 2>/dev/null | wc -l)
     [ $RES -eq 1 ] && echo_date "ERROR: Local $BACKUP_TYPE backup is currently running on remote host ($HOST)" && continue 2
   done
@@ -110,7 +116,7 @@ for HOST in ${REMOTE_HOSTS[@]}; do
     # Remove old backups up to the retention period
     for BACKUP_TYPE in ${BACKUP_TYPES[@]}; do
       echo_date "Removing old ${BACKUP_TYPE} backups"
-      LOCAL_BACKUP_DIRS=( $(find $BACKUP_DEST/$BACKUP_TYPE -maxdepth 1 -mindepth 1 -type d -regex "./[0-9]+-[0-9]+-[0-9]+" 2>/dev/null | sort -n) )
+      LOCAL_BACKUP_DIRS=( $(find $BACKUP_DEST/$BACKUP_TYPE -maxdepth 1 -mindepth 1 -type d -regex ".*/[0-9]+-[0-9]+-[0-9]+" 2>/dev/null | sort -n | head -n-$RETENTION_DAYS) )
       if [ ${#LOCAL_BACKUP_DIRS[@]} -gt $RETENTION_DAYS ]; then
         for LOCAL_DIR in ${LOCAL_BACKUP_DIRS[@]}; do
           $ionice rm -rf $LOCAL_DIR
@@ -152,6 +158,7 @@ EOF
         ;;
         "logs_ro")
           cat >> $CMD_FILE <<EOF
+            mkdir -p $BACKUP_DEST/$BACKUP_TYPE/$BACKUP_DATE
             rsync --bwlimit=5000 --stats -a -e "ssh -c arcfour $SSH_OPTS" --numeric-ids $SSH_CMD \
               $REMOTE:$MAIN_LOGS_DIR/ $BACKUP_DEST/$BACKUP_TYPE/$BACKUP_DATE
 EOF
