@@ -110,13 +110,15 @@ for HOST in ${REMOTE_HOSTS[@]}; do
     # Remove old backups up to the retention period
     for BACKUP_TYPE in ${BACKUP_TYPES[@]}; do
       echo_date "Removing old ${BACKUP_TYPE} backups"
-      LOCAL_BACKUP_DIRS=( $(find $BACKUP_DEST/$BACKUP_TYPE -maxdepth 1 -mindepth 1 -type d 2>/dev/null | sort -n) )
+      LOCAL_BACKUP_DIRS=( $(find $BACKUP_DEST/$BACKUP_TYPE -maxdepth 1 -mindepth 1 -type d -regex "./[0-9]+-[0-9]+-[0-9]+" 2>/dev/null | sort -n) )
       if [ ${#LOCAL_BACKUP_DIRS[@]} -gt $RETENTION_DAYS ]; then
         for LOCAL_DIR in ${LOCAL_BACKUP_DIRS[@]}; do
           $ionice rm -rf $LOCAL_DIR
         done
       fi
     done
+
+  fi
 
   # Now run the backup
   for BACKUP_TYPE in ${BACKUP_TYPES[@]}; do
