@@ -30,6 +30,7 @@ MAIN_BACKUP_DIR="/microcloud/backups_ro"
 MAIN_LOGS_DIR="/microcloud/logs_ro"
 BACKUP_TYPES=( logs_ro mysql domains )
 SSH_OPTS="-o StrictHostKeyChecking=no -o PasswordAuthentication=no -o Compression=no -p 22 -o ConnectTimeout=10"
+SSH_CIPHERS="aes128-gcm@openssh.com"
 RETENTION_DAYS=7
 RSYNC_OPTS="-a"
 FORCE_BACKUP=1
@@ -135,7 +136,7 @@ for HOST in ${REMOTE_HOSTS[@]}; do
     case $BACKUP_TYPE in
       "mysql")
         cat >> $CMD_FILE <<EOF
-          rsync --bwlimit=5000 --stats -a -e "ssh -c arcfour $SSH_OPTS" --numeric-ids $SSH_CMD \
+          rsync --bwlimit=5000 --stats -a -e "ssh -c $SSH_CIPHERS $SSH_OPTS" --numeric-ids $SSH_CMD \
             --exclude="hot" \
             $REMOTE:$BACKUP_SOURCE/$BACKUP_TYPE/ $BACKUP_DEST/$BACKUP_TYPE/
 EOF
@@ -147,7 +148,7 @@ EOF
         # Run a number of supplementary syncs that reference local backups for a quicker sync
         for DATE_DIR in ${REMOTE_DOMAIN_DIRS[@]}; do
           cat >> $CMD_FILE <<EOF
-            rsync --bwlimit=5000 --stats -a -e "ssh -c arcfour $SSH_OPTS" --numeric-ids --delete $SSH_CMD \
+            rsync --bwlimit=5000 --stats -a -e "ssh -c $SSH_CIPHERS $SSH_OPTS" --numeric-ids --delete $SSH_CMD \
               --exclude="./snap" \
               --link-dest=$BACKUP_DEST/$BACKUP_TYPE/latest \
               $REMOTE:$BACKUP_SOURCE/$BACKUP_TYPE/$DATE_DIR/. $BACKUP_DEST/$BACKUP_TYPE/$DATE_DIR/
@@ -159,7 +160,7 @@ EOF
         "logs_ro")
           cat >> $CMD_FILE <<EOF
             mkdir -p $BACKUP_DEST/$BACKUP_TYPE/$BACKUP_DATE
-            rsync --bwlimit=5000 --stats -a -e "ssh -c arcfour $SSH_OPTS" --numeric-ids $SSH_CMD \
+            rsync --bwlimit=5000 --stats -a -e "ssh -c $SSH_CIPHERS $SSH_OPTS" --numeric-ids $SSH_CMD \
               $REMOTE:$MAIN_LOGS_DIR/ $BACKUP_DEST/$BACKUP_TYPE/$BACKUP_DATE
 EOF
           ;;
