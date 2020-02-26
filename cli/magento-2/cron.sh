@@ -2,6 +2,7 @@
 
 EMAIL_RECIPIENT=""
 MAX_DURATION="43200"
+ERROR_REGEX="Fatal error"
 
 ##########################################
 # Do not modify anything below this line #
@@ -44,8 +45,19 @@ echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento cron:run" | timeout $MAX_DURATION
 echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
 echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
 
+if [ -s "$LOG_FILE" ] && [[ ! "$ERROR_REGEX" == "" ]] && [ $RES -eq 0 ] 
+then
+	RES=`grep -c "${ERROR_REGEX}" $LOG_FILE`
+fi
+
 if [ $RES -ne 0 ] && [[ ! "$EMAIL_RECIPIENT" == "" ]]; then
   echo "Something went wrong with the cron, see attached" | mutt -s "Cron error" -a "$LOG_FILE" -- $EMAIL_RECIPIENT
 fi
+
+if [ $RES -ne 0 ]
+then
+  exit 1
+fi
+
 print_time "Completed cron"
 exit 0
