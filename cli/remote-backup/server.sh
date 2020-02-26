@@ -22,11 +22,11 @@ if [[ ! "$SSH_ORIGINAL_COMMAND" == "" ]]; then
     "df -P /microcloud/logs_ro")
       $SSH_ORIGINAL_COMMAND | awk '/microcloud/ {printf("%d", $2)}'
       ;;
-    "rsync --server --sender -logDtpre.iLsf --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/domains/"[0-9][0-9][0-9][0-9]"-"[0-9][0-9]"-"[0-9][0-9]"/."|\
-    "rsync --server --sender -logDtpre.iLsf --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/domains/"|\
-    "rsync --server --sender -logDtpre.iLsf --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/mysql/"|\
-    "rsync --server --sender -logDtpre.iLsf --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/config/"|\
-    "rsync --server --sender -logDtpre.iLsf --bwlimit=5000 --numeric-ids . $MAIN_LOGS_DIR/")
+    "rsync --server --sender -logDtpre.iLsfxC --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/domains/"[0-9][0-9][0-9][0-9]"-"[0-9][0-9]"-"[0-9][0-9]"/."|\
+    "rsync --server --sender -logDtpre.iLsfxC --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/domains/"|\
+    "rsync --server --sender -logDtpre.iLsfxC --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/mysql/"|\
+    "rsync --server --sender -logDtpre.iLsfxC --bwlimit=5000 --numeric-ids . $MAIN_BACKUP_DIR/config/"|\
+    "rsync --server --sender -logDtpre.iLsfxC --bwlimit=5000 --numeric-ids . $MAIN_LOGS_DIR/")
       ionice -c 2 -n 7 nice $SSH_ORIGINAL_COMMAND
       ;;
     "test")
