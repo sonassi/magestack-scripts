@@ -32,7 +32,7 @@ function print_time() {
 }
 
 PID=$(cat $PID_FILE)
-if [[ ! "$PID" == "" ]]; then
+if [[ ! -z "$PID" ]]; then
   kill -0 $PID 2>/dev/null
   [ $? -eq 0 ] && echo "Error: Cron is already running" && exit 99
 fi
@@ -45,19 +45,14 @@ echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento cron:run" | timeout $MAX_DURATION
 echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
 echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
 
-if [ -s "$LOG_FILE" ] && [[ ! "$ERROR_REGEX" == "" ]] && [ $RES -eq 0 ] 
-then
-	RES=`grep -c "${ERROR_REGEX}" $LOG_FILE`
+if [ $RES -eq 0 ] && [ -s "$LOG_FILE" ] && [[ ! -z "$ERROR_REGEX" ]]; then
+  grep -qE "${ERROR_REGEX}" $LOG_FILE
+  [ $? -ne 0 ] && RES=$?
 fi
 
-if [ $RES -ne 0 ] && [[ ! "$EMAIL_RECIPIENT" == "" ]]; then
+if [ $RES -ne 0 ] && [[ ! -z "$EMAIL_RECIPIENT" ]]; then
   echo "Something went wrong with the cron, see attached" | mutt -s "Cron error" -a "$LOG_FILE" -- $EMAIL_RECIPIENT
 fi
 
-if [ $RES -ne 0 ]
-then
-  exit 1
-fi
-
 print_time "Completed cron"
-exit 0
+exit $RES
