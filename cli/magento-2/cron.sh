@@ -2,7 +2,8 @@
 
 EMAIL_RECIPIENT=""
 MAX_DURATION="43200"
-ERROR_REGEX="Fatal error"
+ERROR_REGEX="(PHP Fatal error|PHP Parse error|main\.ERROR)"
+ERROR_REGEX_MATCH_EXIT_CODE=1
 
 ##########################################
 # Do not modify anything below this line #
@@ -46,8 +47,10 @@ echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fake
 echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
 
 if [ $RES -eq 0 ] && [ -s "$LOG_FILE" ] && [[ ! -z "$ERROR_REGEX" ]]; then
-  grep -qE "${ERROR_REGEX}" $LOG_FILE
-  [ $? -ne 0 ] && RES=$?
+  ERROR_REGEX_MATCH_COUNT=$(grep -cE "${ERROR_REGEX}" $LOG_FILE)
+  if [ $ERROR_REGEX_MATCH_COUNT -ne 0 ]; then
+      RES=$ERROR_REGEX_MATCH_EXIT_CODE
+  fi
 fi
 
 if [ $RES -ne 0 ] && [[ ! -z "$EMAIL_RECIPIENT" ]]; then
