@@ -41,16 +41,16 @@ print_time "Starting cron"
 echo $CUR_PID > $PID_FILE
 
 RES=0
-echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
-echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
-echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [ $? -ne 0 ] && RES=$?
+echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
+echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
+echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
 
-if [ $RES -eq 0 ] && [ -s "$LOG_FILE" ] && [[ ! -z "$ERROR_REGEX" ]]; then
+if [[ $RES -eq 0 ]] && [[ -s "$LOG_FILE" ]] && [[ ! -z "$ERROR_REGEX" ]]; then
   grep -qE "${ERROR_REGEX}" $LOG_FILE
-  [ $? -ne 0 ] && RES=$?
+  [[ $? -eq 0 ]] && RES=1
 fi
 
-if [ $RES -ne 0 ] && [[ ! -z "$EMAIL_RECIPIENT" ]]; then
+if [[ $RES -ne 0 ]] && [[ ! -z "$EMAIL_RECIPIENT" ]]; then
   echo "Something went wrong with the cron, see attached" | mutt -s "Cron error" -a "$LOG_FILE" -- $EMAIL_RECIPIENT
 fi
 
