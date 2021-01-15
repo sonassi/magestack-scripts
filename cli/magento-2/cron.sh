@@ -40,10 +40,15 @@ fi
 print_time "Starting cron"
 echo $CUR_PID > $PID_FILE
 
+echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento --version | grep -qi '2\.[0-3]\.'" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash
+V2OLD_CHECK=$?
+
 RES=0
 echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
-echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
-echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
+if [[ $V2OLD_CHECK -eq 0 ]]; then
+  echo "cd $REL_INSTALLDIR; $PHP_BIN update/cron.php" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
+  echo "cd $REL_INSTALLDIR; $PHP_BIN bin/magento setup:cron:run" | timeout $MAX_DURATION fakechroot /usr/sbin/chroot /microcloud/domains/$DOMAIN_GROUP /bin/bash >> $LOG_FILE 2>&1; [[ $? -ne 0 ]] && RES=$?
+fi
 
 if [[ $RES -eq 0 ]] && [[ -s "$LOG_FILE" ]] && [[ ! -z "$ERROR_REGEX" ]]; then
   grep -qE "${ERROR_REGEX}" $LOG_FILE
